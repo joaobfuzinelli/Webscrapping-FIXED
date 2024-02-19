@@ -34,9 +34,10 @@ def extract_links(url_to_check):
     
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        return set(a['href'] for a in soup.find_all('a', href=True) if a['href'].endswith('.zip'))
+        links = [a['href'] for a in soup.find_all('a', href=True)]
+        return links
     else:
-        return set()
+        return []
 
 while True:
     for url_to_check in url_list:
@@ -53,6 +54,11 @@ while True:
         for link_adicionado in links_adicionados:
             url_list.append(link_adicionado)
             print(link_adicionado)
+
+    # Procurar pela variável específica "Dados_abertos_Nao_Previdenciario.zip"
+    for link in novos_links:
+        if "Dados_abertos_Nao_Previdenciario.zip" in link:
+            print(f"Encontrada a variável 'Dados_abertos_Nao_Previdenciario.zip': {link}")
 
     # Aguardar antes da próxima verificação (por exemplo, 1 hora)
     time.sleep(3600)
