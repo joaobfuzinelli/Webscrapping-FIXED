@@ -1,3 +1,4 @@
+#Bibliotecas usadas para fazer o WS
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
