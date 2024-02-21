@@ -3,10 +3,6 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import time
 
-"""
-Script para baixar arquivos .zip de uma URL e verificar periodicamente novos arquivos.
-"""
-
 # URL inicial
 url = "https://dadosabertos.pgfn.gov.br/"
 
@@ -17,15 +13,26 @@ headers = {
 
 url_list = [url]
 
+# Conjunto para armazenar as URLs já verificadas
+checked_urls = set()
+
 def download_zip(url_to_check):
     response = requests.get(url_to_check, headers=headers, stream=True)
     
     if response.status_code == 200:
         filename = urlparse(url_to_check).path.split('/')[-2]
-        with open(f"Dados_abertos_{filename}.zip", 'wb') as f:
-            for chunk in response.iter_content(chunk_size=128):
-                f.write(chunk)
-        print(f"Download bem-sucedido para: {url_to_check}")
+        
+        # Verifica se a URL já foi verificada anteriormente e se a pasta é nova
+        if url_to_check not in checked_urls and "Dados_abertos_Nao_Previdenciario.zip" in filename:
+            with open(f"Dados_abertos_{filename}.zip", 'wb') as f:
+                for chunk in response.iter_content(chunk_size=128):
+                    f.write(chunk)
+            print(f"Download bem-sucedido para: {url_to_check}")
+            
+            # Adiciona a URL ao conjunto de URLs verificadas
+            checked_urls.add(url_to_check)
+        else:
+            print(f"URL já verificada anteriormente ou a pasta não corresponde à variável desejada: {url_to_check}")
     else:
         print(f"Falha no download para: {url_to_check}")
 
@@ -40,14 +47,12 @@ def extract_links(url_to_check):
         return []
 
 while True:
-    for url_to_check in url_list:
-        download_zip(url_to_check)
+    novas_pastas = set()
 
-    novos_links = set()
     for url_to_check in url_list:
-        novos_links.update(extract_links(url_to_check))
-    
-    links_adicionados = novos_links - set(url_list)
+        novas_pastas.update(extract_links(url_to_check))
+
+    links_adicionados = novas_pastas - set(url_list)
 
     if links_adicionados:
         print("Novas pastas adicionadas:")
@@ -55,10 +60,8 @@ while True:
             url_list.append(link_adicionado)
             print(link_adicionado)
 
-    # Procurar pela variável específica "Dados_abertos_Nao_Previdenciario.zip"
-    for link in novos_links:
-        if "Dados_abertos_Nao_Previdenciario.zip" in link:
-            print(f"Encontrada a variável 'Dados_abertos_Nao_Previdenciario.zip': {link}")
+    for url_to_check in links_adicionados:
+        download_zip(url_to_check)
 
     # Aguardar antes da próxima verificação (por exemplo, 1 hora)
     time.sleep(3600)
