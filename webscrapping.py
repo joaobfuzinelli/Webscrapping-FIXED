@@ -1,7 +1,9 @@
-#Bibliotecas usadas para fazer o WS
+#Bibliotecas usadas para o WS
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+import zipfile
+import io
 import time
 
 # URL inicial
@@ -32,10 +34,24 @@ def download_zip(url_to_check):
             
             # Adiciona a URL ao conjunto de URLs verificadas
             checked_urls.add(url_to_check)
+
+            # Extrai o conteúdo do arquivo zip
+            extract_zip_content(filename)
         else:
             print(f"URL já verificada anteriormente ou a pasta não corresponde à variável desejada: {url_to_check}")
     else:
         print(f"Falha no download para: {url_to_check}")
+
+def extract_zip_content(zip_filename):
+    with zipfile.ZipFile(f"Dados_abertos_{zip_filename}.zip", 'r') as zip_ref:
+        # Extraindo todos os arquivos para um diretório (pode ser ajustado conforme necessário)
+        zip_ref.extractall(f"Dados_abertos_{zip_filename}")
+
+        # Lendo o conteúdo de cada arquivo extraído
+        for file_info in zip_ref.infolist():
+            with zip_ref.open(file_info) as file:
+                content = file.read()
+                print(f"Conteúdo do arquivo {file_info.filename}:\n{content.decode('utf-8')}")
 
 def extract_links(url_to_check):
     response = requests.get(url_to_check, headers=headers)
